@@ -1,0 +1,13 @@
+contract SmartContractFunding {
+    address public contractor;
+    uint public totalFundsNeeded = 800000; // Total estimated project cost
+    uint public totalFundsRaised;
+
+    constructor() {
+        contractor = msg.sender;
+    }
+
+    function fundContract() public payable {
+        totalFundsRaised += msg.value;
+    }
+}
