@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract MultiSignatureWallet {
+    address[] public owners;
+    mapping(address => bool) public isOwner;
+    mapping(uint => mapping(address => bool)) public confirmations;
+    mapping(uint => bool) public isExecuted;
+    mapping(uint => address[]) public signatures;
+
+    constructor(address[] memory _owners) {
+        require(_owners.length > 0, "Owners list cannot be empty");
+        for (uint i = 0; i < _owners.length; i++) {
+            require(_owners[i] != address(0), "Invalid owner address");
+            require(!isOwner[_owners[i]], "Duplicate owner address");
+            owners.push(_owners[i]);
+            isOwner[_owners[i]] = true;
+        }
+    }
+
+    modifier onlyOwner() {
+        require(isOwner[msg.sender], "Only owners can call this function");
+        _;
+    }
+
+    modifier validRequirement(uint _required) {
+        require(_required > 0 && _required <= owners.length, "Invalid requirement");
+        _;
+    }
+
+    function submitTransaction(address _to, uint _value, bytes memory _data) public onlyOwner {
+        uint txId = transactions.length;
+        transactions.push(Transaction(msg.sender, _to, _value, _data, false));
+        emit TransactionSubmitted(txId, msg.sender, _to, _value, _data);
+    }
+
+    function confirmTransaction(uint _txId) public onlyOwner {
+        require(transactions[_txId].from != address(0), "Transaction does not exist");
+        require(!confirmations[_txId][msg.sender], "Transaction already confirmed");
+        confirmations[_txId][msg.sender] = true;
+        signatures[_txId].push(msg.sender);
+        emit TransactionConfirmed(_txId, msg.sender);
+        executeTransaction(_txId);
+    }
+
+    function executeTransaction(uint _txId) public onlyOwner {
+        require(!isExecuted[_txId], "Transaction already executed");
+        uint confirmedCount = 0;
+        for (uint i = 0; i < owners.length; i++) {
+            if (confirmations[_txId][owners[i]]) {
+                confirmedCount++;
+            }
+        }
+        require(confirmedCount >= required, "Insufficient confirmations");
+        Transaction memory txData = transactions[_txId];
+        isExecuted[_txId] = true;
+        (bool success, ) = txData.to.call{value: txData.value}(_txData.data);
+        require(success, "Transaction execution failed");
+        emit TransactionExecuted(_txId, txData.to, txData.value, txData.data);
+    }
+
+    function revokeConfirmation(uint _txId) public onlyOwner {
+        require(!isExecuted[_txId], "Transaction already executed");
+        require(confirmations[_txId][msg.sender], "Transaction not confirmed by this owner");
+        confirmations[_txId][msg.sender] = false;
+        for (uint i = 0; i < signatures[_txId].length; i++) {
+            if (signatures[_txId][i] == msg.sender) {
+                signatures[_txId][i] = signatures[_txId][signatures[_txId].length - 1];
+                signatures[_txId].pop();
+                break;
+            }
+        }
+        emit ConfirmationRevoked(_txId, msg.sender);
+    }
+}
