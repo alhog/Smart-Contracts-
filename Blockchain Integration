@@ -1,0 +1,35 @@
+pragma solidity ^0.8.0;
+
+contract BlockchainIntegration {
+    address public owner;
+    mapping(address => bool) public whitelist;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only contract owner can perform this action");
+        _;
+    }
+
+    modifier onlyWhitelisted() {
+        require(whitelist[msg.sender], "Sender is not whitelisted");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function addToWhitelist(address _address) public onlyOwner {
+        whitelist[_address] = true;
+    }
+
+    function removeFromWhitelist(address _address) public onlyOwner {
+        delete whitelist[_address];
+    }
+
+    function executeTransaction(address _to, uint256 _value) public onlyWhitelisted {
+        require(_to != address(0), "Invalid recipient address");
+        payable(_to).transfer(_value);
+    }
+
+    receive() external payable {}
+}
