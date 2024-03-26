@@ -1,0 +1,25 @@
+pragma solidity ^0.8.0;
+
+contract Marketplace {
+    struct Product {
+        address seller;
+        string name;
+        uint price;
+        uint quantity;
+    }
+    mapping(uint => Product) public products;
+    uint public productCount;
+
+    function createProduct(string memory _name, uint _price, uint _quantity) external {
+        productCount++;
+        products[productCount] = Product(msg.sender, _name, _price, _quantity);
+    }
+
+    function buyProduct(uint _productId, uint _quantity) external payable {
+        Product storage product = products[_productId];
+        require(product.quantity >= _quantity, "Insufficient quantity");
+        require(msg.value == product.price * _quantity, "Incorrect payment amount");
+        product.quantity -= _quantity;
+        payable(product.seller).transfer(msg.value);
+    }
+}
