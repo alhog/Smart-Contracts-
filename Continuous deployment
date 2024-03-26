@@ -1,0 +1,26 @@
+pragma solidity ^0.8.0;
+
+contract ContinuousDeployment {
+    address public owner;
+    bool public isDeployed;
+    string public deploymentURL;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only contract owner can perform this action");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function deploy(string memory _deploymentURL) public onlyOwner {
+        isDeployed = true;
+        deploymentURL = _deploymentURL;
+    }
+
+    function updateDeployment(string memory _newURL) public onlyOwner {
+        require(isDeployed, "Contract is not deployed yet");
+        deploymentURL = _newURL;
+    }
+}
