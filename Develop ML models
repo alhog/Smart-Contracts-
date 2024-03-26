@@ -1,0 +1,10 @@
+contract MachineLearningModels {
+    address public contractor;
+    uint public totalHours = 50;
+    uint public hourlyRate = 200;
+    uint public totalContractValue = totalHours * hourlyRate;
+
+    constructor() {
+        contractor = msg.sender;
+    }
+}
