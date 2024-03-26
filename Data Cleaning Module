@@ -1,0 +1,10 @@
+import pandas as pd
+
+class DataCleaning:
+    def __init__(self):
+        pass
+
+    def clean_data(self, data):
+        # Implement data cleaning logic
+        cleaned_data = data.dropna()
+        return cleaned_data
