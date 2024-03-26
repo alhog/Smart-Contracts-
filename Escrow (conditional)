@@ -1,0 +1,38 @@
+pragma solidity ^0.8.0;
+
+contract Escrow {
+    address public buyer;
+    address public seller;
+    address public arbiter;
+    uint public amount;
+    bool public releasedToSeller;
+    bool public releasedToBuyer;
+
+    constructor(address _buyer, address _seller, address _arbiter) {
+        buyer = _buyer;
+        seller = _seller;
+        arbiter = _arbiter;
+    }
+
+    function fund() public payable {
+        require(msg.sender == buyer);
+        amount += msg.value;
+    }
+
+    function releaseToSeller() public {
+        require(msg.sender == arbiter);
+        releasedToSeller = true;
+        payable(seller).transfer(amount);
+    }
+
+    function releaseToBuyer() public {
+        require(msg.sender == arbiter);
+        releasedToBuyer = true;
+        payable(buyer).transfer(amount);
+    }
+
+    function refundToBuyer() public {
+        require(msg.sender == arbiter);
+        payable(buyer).transfer(amount);
+    }
+}
