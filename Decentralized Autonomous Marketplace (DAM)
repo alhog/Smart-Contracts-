@@ -1,0 +1,29 @@
+pragma solidity ^0.8.0;
+
+contract DAM {
+    struct Product {
+        string name;
+        uint price;
+        uint quantity;
+        bool available;
+    }
+    mapping(uint => Product) public products;
+    uint public productCount;
+
+    function addProduct(string memory _name, uint _price, uint _quantity) external {
+        productCount++;
+        products[productCount] = Product(_name, _price, _quantity, true);
+    }
+
+    function purchaseProduct(uint _productId, uint _quantity) external payable {
+        Product storage product = products[_productId];
+        require(product.available, "Product not available");
+        require(product.quantity >= _quantity, "Insufficient quantity");
+        require(msg.value == product.price * _quantity, "Incorrect payment amount");
+        product.quantity -= _quantity;
+        if (product.quantity == 0) {
+            product.available = false;
+        }
+        // Transfer funds to seller
+    }
+}
