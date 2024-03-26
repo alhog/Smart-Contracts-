@@ -1,0 +1,32 @@
+    event PenaltyApplied(uint amount);
+    event ProjectCompleted();
+
+    constructor(address _client, uint _deadline) {
+        contractor = msg.sender;
+        client = _client;
+        deadline = _deadline;
+    }
+
+    // Function to apply penalty for late completion
+    function applyPenalty(uint _amount) external onlyContractor {
+        require(block.timestamp > deadline, "Deadline has not passed yet");
+        totalPenalty += _amount;
+        emit PenaltyApplied(_amount);
+    }
+
+    // Function to mark project as completed
+    function markProjectCompleted() external onlyContractor {
+        require(block.timestamp > deadline, "Deadline has not passed yet");
+        projectCompleted = true;
+        emit ProjectCompleted();
+    }
+
+    // Function to withdraw penalty by the client
+    function withdrawPenalty(uint _amount) external {
+        require(msg.sender == client, "Only the client can withdraw the penalty");
+        require(projectCompleted, "Project is not completed yet");
+        require(_amount <= totalPenalty, "Insufficient penalty balance");
+        totalPenalty -= _amount;
+        payable(client).transfer(_amount);
+    }
+}
