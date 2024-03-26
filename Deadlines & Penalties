@@ -1,0 +1,16 @@
+pragma solidity ^0.8.0;
+
+contract ProjectDeadline {
+    address public contractor;
+    address public client;
+    uint public totalPenalty;
+    uint public deadline;
+    bool public projectCompleted;
+    
+    // Modifier to restrict access to the contractor only
+    modifier onlyContractor() {
+        require(msg.sender == contractor, "Only the contractor can access this function");
+        _;
+    }
+
+    // Event
