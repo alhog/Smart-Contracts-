@@ -1,0 +1,54 @@
+pragma solidity ^0.8.0;
+
+contract DataPipeline {
+    address public contractor;
+    uint public totalHours;
+    uint public hourlyRate;
+    uint public totalContractValue;
+    uint public totalPaid;
+    uint public totalWithdrawn;
+    bool public projectCompleted;
+
+    // Modifier to restrict access to the contractor only
+    modifier onlyContractor() {
+        require(msg.sender == contractor, "Only the contractor can access this function");
+        _;
+    }
+
+    // Event to log when funds are withdrawn
+    event FundsWithdrawn(address indexed contractor, uint amount);
+
+    // Constructor to initialize contract variables
+    constructor(uint _totalHours, uint _hourlyRate) {
+        contractor = msg.sender;
+        totalHours = _totalHours;
+        hourlyRate = _hourlyRate;
+        totalContractValue = totalHours * hourlyRate;
+    }
+
+    // Function to update the total contract value
+    function updateTotalContractValue() external onlyContractor {
+        require(!projectCompleted, "Project is completed");
+        totalContractValue = totalHours * hourlyRate;
+    }
+
+    // Function to withdraw funds from the contract
+    function withdrawFunds(uint _amount) external onlyContractor {
+        require(!projectCompleted, "Project is completed");
+        require(_amount <= address(this).balance, "Insufficient contract balance");
+        payable(contractor).transfer(_amount);
+        totalWithdrawn += _amount;
+        emit FundsWithdrawn(contractor, _amount);
+        // Check if total amount withdrawn is equal to or exceeds the total contract value
+        if (totalWithdrawn >= totalContractValue) {
+            projectCompleted = true;
+        }
+    }
+
+    // Fallback function to receive ether
+    receive() external payable {
+        require(!projectCompleted, "Project is completed");
+        require(totalPaid + msg.value <= totalContractValue, "Total payment exceeds contract value");
+        totalPaid += msg.value;
+    }
+}
