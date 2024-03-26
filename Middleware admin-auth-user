@@ -1,0 +1,42 @@
+// Define user roles
+const ROLES = {
+    ADMIN: 'admin',
+    USER: 'user'
+};
+
+// Define permissions for each role
+const PERMISSIONS = {
+    [ROLES.ADMIN]: ['read', 'write'],
+    [ROLES.USER]: ['read']
+};
+
+// Authorization middleware to check user permissions
+function authorize(role, permission) {
+    return (req, res, next) => {
+        // Check if user has the specified role
+        if (req.user.role !== role) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+        // Check if user has the specified permission
+        if (!PERMISSIONS[role].includes(permission)) {
+            return res.status(403).json({ error: 'Insufficient permissions' });
+        }
+        next();
+    };
+}
+
+// Protected route accessible only to admins with write permission
+app.post('/admin/action', authenticateToken, authorize(ROLES.ADMIN, 'write'), (req, res) => {
+    // Handle admin action
+});
+
+// Protected route accessible to all authenticated users
+app.get('/user/info', authenticateToken, (req, res) => {
+    // Send user information
+});
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
