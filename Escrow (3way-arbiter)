@@ -1,0 +1,45 @@
+pragma solidity ^0.8.0;
+
+contract EscrowContract {
+    address public buyer;
+    address public seller;
+    address public arbiter;
+    uint public escrowAmount;
+    bool public isDispute;
+    bool public isCompleted;
+    
+    constructor(address _buyer, address _seller, address _arbiter, uint _amount) {
+        buyer = _buyer;
+        seller = _seller;
+        arbiter = _arbiter;
+        escrowAmount = _amount;
+        isDispute = false;
+        isCompleted = false;
+    }
+    
+    function releaseEscrow() external {
+        require(msg.sender == buyer || msg.sender == seller, "Only buyer or seller can release escrow");
+        require(isDispute == false, "Dispute is active");
+        isCompleted = true;
+        payable(seller).transfer(escrowAmount);
+    }
+    
+    function refundEscrow() external {
+        require(msg.sender == buyer || msg.sender == arbiter, "Only buyer or arbiter can refund escrow");
+        require(isDispute == false, "Dispute is active");
+        isCompleted = true;
+        payable(buyer).transfer(escrowAmount);
+    }
+    
+    function initiateDispute() external {
+        require(msg.sender == arbiter, "Only arbiter can initiate dispute");
+        isDispute = true;
+    }
+    
+    function resolveDispute(address _winner) external {
+        require(msg.sender == arbiter, "Only arbiter can resolve dispute");
+        require(isDispute == true, "No active dispute");
+        isCompleted = true;
+        payable(_winner).transfer(escrowAmount);
+    }
+}
