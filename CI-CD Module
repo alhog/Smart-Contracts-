@@ -1,0 +1,14 @@
+import os
+import subprocess
+
+class CI_CD:
+    def __init__(self, project_directory):
+        self.project_directory = project_directory
+
+    def run_tests(self):
+        os.chdir(self.project_directory)
+        subprocess.run(["pytest", "-v"])
+
+    def deploy(self):
+        os.chdir(self.project_directory)
+        subprocess.run(["bash", "deploy.sh"])
