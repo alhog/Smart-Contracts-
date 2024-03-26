@@ -1,0 +1,24 @@
+import pandas as pd
+import numpy as np
+from refinery_module import data_cleaning, feature_engineering, outlier_detection
+
+# Step 1: Data Cleaning
+cleaned_data = data_cleaning.clean(raw_data)
+
+# Step 2: Feature Engineering
+engineered_features = feature_engineering.engineer(cleaned_data)
+
+# Step 3: Outlier Detection
+outliers_removed = outlier_detection.detect_outliers(engineered_features)
+
+# Step 4: Imputation
+imputed_data = outliers_removed.fillna(outliers_removed.mean())
+
+# Step 5: Normalization
+normalized_data = (imputed_data - imputed_data.min()) / (imputed_data.max() - imputed_data.min())
+
+# Step 6: Dimensionality Reduction (Optional)
+# reduced_dimensions = dimensionality_reduction.reduce(normalized_data)
+
+# Step 7: Output
+output_module.save_data(normalized_data)
