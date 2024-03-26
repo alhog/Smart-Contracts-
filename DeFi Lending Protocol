@@ -1,0 +1,39 @@
+pragma solidity ^0.8.0;
+
+contract LendingContract {
+    mapping(address => uint) public balances;
+    mapping(address => mapping(address => uint)) public allowances;
+    uint public totalSupply;
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function mint(address _recipient, uint _amount) external {
+        require(msg.sender == owner, "Only owner can mint tokens");
+        totalSupply += _amount;
+        balances[_recipient] += _amount;
+    }
+
+    function approve(address _spender, uint _amount) external returns (bool) {
+        allowances[msg.sender][_spender] = _amount;
+        return true;
+    }
+
+    function transfer(address _recipient, uint _amount) external returns (bool) {
+        require(balances[msg.sender] >= _amount, "Insufficient balance");
+        balances[msg.sender] -= _amount;
+        balances[_recipient] += _amount;
+        return true;
+    }
+
+    function transferFrom(address _sender, address _recipient, uint _amount) external returns (bool) {
+        require(balances[_sender] >= _amount, "Insufficient balance");
+        require(allowances[_sender][msg.sender] >= _amount, "Allowance exceeded");
+        balances[_sender] -= _amount;
+        balances[_recipient] += _amount;
+        allowances[_sender][msg.sender] -= _amount;
+        return true;
+    }
+}
