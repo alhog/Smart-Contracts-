@@ -1,0 +1,73 @@
+pragma solidity ^0.8.0;
+
+contract EscrowContract {
+    address public client;
+    address public contractor;
+    address public arbiter;
+    uint public depositAmount;
+    bool public clientApproval;
+    bool public contractorApproval;
+    bool public arbiterApproval;
+    bool public dispute;
+    bool public contractCompleted;
+    mapping(address => bool) public withdrawalApproved;
+
+    event Deposit(address indexed _from, uint _amount);
+    event Withdrawal(address indexed _to, uint _amount);
+    event DisputeStarted();
+    event DisputeResolved();
+    event ContractCompleted();
+
+    modifier onlyClient() {
+        require(msg.sender == client, "Only the client can call this function");
+        _;
+    }
+
+    modifier onlyContractor() {
+        require(msg.sender == contractor, "Only the contractor can call this function");
+        _;
+    }
+
+    modifier onlyArbiter() {
+        require(msg.sender == arbiter, "Only the arbiter can call this function");
+        _;
+    }
+
+    constructor(address _client, address _contractor, address _arbiter, uint _depositAmount) {
+        client = _client;
+        contractor = _contractor;
+        arbiter = _arbiter;
+        depositAmount = _depositAmount;
+    }
+
+    function deposit() external payable onlyClient {
+        require(msg.value == depositAmount, "Deposit amount must match contract requirements");
+        emit Deposit(msg.sender, msg.value);
+    }
+
+    function withdraw(uint _amount) external onlyClient {
+        require(!dispute, "Dispute is ongoing");
+        require(address(this).balance >= _amount, "Insufficient balance in contract");
+        payable(client).transfer(_amount);
+        emit Withdrawal(client, _amount);
+    }
+
+    function approveWithdrawal() external onlyClient {
+        require(dispute, "No ongoing dispute");
+        withdrawalApproved[msg.sender] = true;
+    }
+
+    function startDispute() external onlyClient {
+        require(!dispute, "Dispute is already ongoing");
+        dispute = true;
+        emit DisputeStarted();
+    }
+
+    function resolveDispute() external onlyArbiter {
+        require(dispute, "No ongoing dispute");
+        require(withdrawalApproved[client] && withdrawalApproved[contractor], "Both parties must approve withdrawal");
+        contractCompleted = true;
+        emit DisputeResolved();
+        emit ContractCompleted();
+    }
+}
