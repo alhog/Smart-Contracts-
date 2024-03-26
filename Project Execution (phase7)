@@ -1,0 +1,5 @@
+contract MonitoringMaintenance {
+    address public contractor;
+    uint public totalHours = 30;
+    uint public hourlyRate = 200;
+    uint public totalContractValue = totalHours * hourly
