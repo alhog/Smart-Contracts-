@@ -1,0 +1,33 @@
+pragma solidity ^0.8.0;
+
+contract DataPrivacy {
+    address public owner;
+    mapping(bytes32 => bool) private encryptedData; // Store encrypted data hashes
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only contract owner can perform this action");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // Encrypt data and store its hash
+    function encryptData(bytes memory _data) public onlyOwner returns (bytes32) {
+        bytes32 dataHash = keccak256(_data);
+        encryptedData[dataHash] = true;
+        return dataHash;
+    }
+
+    // Validate data integrity by comparing with stored hash
+    function validateData(bytes memory _data, bytes32 _dataHash) public view returns (bool) {
+        return encryptedData[_dataHash] && (keccak256(_data) == _dataHash);
+    }
+
+    // Decrypt data if validation passes (dummy function for demonstration)
+    function decryptData(bytes memory _data) public pure returns (bytes memory) {
+        // Decrypt data logic goes here (not implemented in this example)
+        return _data; // Placeholder, actual decryption logic should be implemented
+    }
+}
