@@ -1,0 +1,33 @@
+pragma solidity ^0.8.0;
+
+contract APIIntegration {
+    address public owner;
+    mapping(address => bool) public approvedUsers;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only contract owner can perform this action");
+        _;
+    }
+
+    modifier onlyApproved() {
+        require(approvedUsers[msg.sender], "Sender is not approved to perform this action");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function addToApprovedUsers(address _user) public onlyOwner {
+        approvedUsers[_user] = true;
+    }
+
+    function removeFromApprovedUsers(address _user) public onlyOwner {
+        delete approvedUsers[_user];
+    }
+
+    function integrateAPI(bytes memory _apiData) public onlyApproved returns (bytes memory) {
+        // Implement API integration logic
+        return _apiData;
+    }
+}
