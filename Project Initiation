@@ -1,0 +1,10 @@
+contract ProjectKickoffMeeting {
+    address public contractor;
+    uint public totalHours = 10;
+    uint public hourlyRate = 200; // Assuming hourly rate of $200
+    uint public totalContractValue = totalHours * hourlyRate;
+
+    constructor() {
+        contractor = msg.sender;
+    }
+}
