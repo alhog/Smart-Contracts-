@@ -1,0 +1,43 @@
+pragma solidity ^0.8.0;
+
+contract MilestonePayment {
+    address public contractor;
+    address public client;
+    uint public totalAmount;
+    uint public totalPaid;
+    bool public projectCompleted;
+
+    // Modifier to restrict access to the client only
+    modifier onlyClient() {
+        require(msg.sender == client, "Only the client can access this function");
+        _;
+    }
+
+    // Event to log when funds are withdrawn
+    event FundsWithdrawn(address indexed recipient, uint amount);
+
+    // Constructor to initialize contract variables
+    constructor(address _client, uint _totalAmount) {
+        contractor = msg.sender;
+        client = _client;
+        totalAmount = _totalAmount;
+    }
+
+    // Function to withdraw funds from the contract
+    function withdrawFunds(uint _amount) external onlyClient {
+        require(!projectCompleted, "Project is completed");
+        require(_amount <= address(this).balance, "Insufficient contract balance");
+        payable(client).transfer(_amount);
+        totalPaid += _amount;
+        emit FundsWithdrawn(client, _amount);
+        // Check if total amount paid is equal to or exceeds the total contract amount
+        if (totalPaid >= totalAmount) {
+            projectCompleted = true;
+        }
+    }
+
+    // Fallback function to receive ether
+    receive() external payable {
+        revert("This contract does not accept direct payments");
+    }
+}
