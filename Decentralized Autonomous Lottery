@@ -1,0 +1,40 @@
+pragma solidity ^0.8.0;
+
+contract DAL {
+    address public owner;
+    uint public ticketPrice;
+    uint public ticketCount;
+    uint public winningTicket;
+    bool public lotteryOpen;
+    mapping(address => uint) public tickets;
+
+    constructor(uint _ticketPrice) {
+        owner = msg.sender;
+        ticketPrice = _ticketPrice;
+    }
+
+    function buyTicket() external payable {
+        require(msg.value == ticketPrice, "Incorrect ticket price");
+        tickets[msg.sender]++;
+        ticketCount++;
+    }
+
+    function startLottery() external {
+        require(msg.sender == owner, "Only owner can start lottery");
+        require(ticketCount > 0, "No tickets sold");
+        winningTicket = uint(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % ticketCount + 1;
+        lotteryOpen = true;
+    }
+
+    function endLottery() external {
+        require(msg.sender == owner, "Only owner can end lottery");
+        require(lotteryOpen, "Lottery not open");
+        lotteryOpen = false;
+    }
+
+    function claimPrize() external {
+        require(!lotteryOpen, "Lottery still open");
+        require(tickets[msg.sender] == winningTicket, "Not winning ticket holder");
+        payable(msg.sender).transfer(address(this).balance);
+    }
+}
