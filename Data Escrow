@@ -1,0 +1,59 @@
+// Novel Smart Contract: Data Protection Escrow
+// This smart contract ensures that sensitive data used in the project remains protected and is only accessed by authorized parties.
+
+pragma solidity ^0.8.0;
+
+contract DataProtectionEscrow {
+    address public owner;
+    address public dataProtectionOfficer;
+    uint256 public totalFunds;
+
+    mapping(address => bool) public authorizedParties;
+    
+    event DataAccessRequested(address requester, uint256 amount);
+    event DataAccessGranted(address requester);
+    
+    constructor(address _dataProtectionOfficer) {
+        owner = msg.sender;
+        dataProtectionOfficer = _dataProtectionOfficer;
+    }
+    
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the contract owner can call this function.");
+        _;
+    }
+    
+    modifier onlyDataProtectionOfficer() {
+        require(msg.sender == dataProtectionOfficer, "Only the data protection officer can call this function.");
+        _;
+    }
+    
+    modifier onlyAuthorizedParty() {
+        require(authorizedParties[msg.sender], "Only authorized parties can call this function.");
+        _;
+    }
+    
+    function addAuthorizedParty(address _party) external onlyOwner {
+        authorizedParties[_party] = true;
+    }
+    
+    function removeAuthorizedParty(address _party) external onlyOwner {
+        authorizedParties[_party] = false;
+    }
+    
+    function requestAccessToData(uint256 _amount) external payable {
+        require(msg.value == _amount, "Incorrect amount sent with the request.");
+        totalFunds += _amount;
+        emit DataAccessRequested(msg.sender, _amount);
+    }
+    
+    function grantAccessToData(address _requester) external onlyDataProtectionOfficer {
+        require(totalFunds > 0, "No funds available for data access.");
+        totalFunds -= 1;
+        emit DataAccessGranted(_requester);
+    }
+    
+    function withdrawFunds() external onlyOwner {
+        payable(owner).transfer(address(this).balance);
+    }
+}
