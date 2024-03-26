@@ -1,0 +1,21 @@
+pragma solidity ^0.8.0;
+
+contract IdentityManagement {
+    struct Identity {
+        string name;
+        uint age;
+        address owner;
+        bool verified;
+    }
+    mapping(address => Identity) public identities;
+
+    function createIdentity(string memory _name, uint _age) external {
+        require(identities[msg.sender].owner == address(0), "Identity already exists");
+        identities[msg.sender] = Identity(_name, _age, msg.sender, false);
+    }
+
+    function verifyIdentity(address _user) external {
+        require(identities[_user].owner == msg.sender, "Unauthorized");
+        identities[_user].verified = true;
+    }
+}
