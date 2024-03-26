@@ -1,0 +1,10 @@
+contract SmartContractTesting {
+    address public contractor;
+    uint public totalHours = 20;
+    uint public hourlyRate = 200;
+    uint public totalContractValue = totalHours * hourlyRate;
+
+    constructor() {
+        contractor = msg.sender;
+    }
+}
