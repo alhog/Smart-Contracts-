@@ -1,0 +1,23 @@
+pragma solidity ^0.8.0;
+
+contract DEX {
+    mapping(address => mapping(address => uint)) public balances;
+
+    function deposit(address _token, uint _amount) external {
+        require(_token != address(0), "Invalid token address");
+        balances[msg.sender][_token] += _amount;
+        // Transfer tokens from user to contract
+        // Approve contract to spend tokens
+    }
+
+    function withdraw(address _token, uint _amount) external {
+        require(balances[msg.sender][_token] >= _amount, "Insufficient balance");
+        balances[msg.sender][_token] -= _amount;
+        // Transfer tokens from contract to user
+    }
+
+    function trade(address _token1, uint _amount1, address _token2, uint _amount2) external {
+        require(balances[msg.sender][_token1] >= _amount1, "Insufficient balance of token1");
+        // Perform token exchange
+    }
+}
