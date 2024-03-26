@@ -1,0 +1,31 @@
+pragma solidity ^0.8.0;
+
+contract DAI {
+    struct Policy {
+        address insured;
+        uint premium;
+        uint payout;
+        uint startDate;
+        uint endDate;
+        bool active;
+        bool claimed;
+    }
+    mapping(uint => Policy) public policies;
+    uint public policyCount;
+
+    function purchasePolicy(uint _premium, uint _payout, uint _duration) external payable {
+        require(msg.value == _premium, "Incorrect premium amount");
+        policyCount++;
+        policies[policyCount] = Policy(msg.sender, _premium, _payout, block.timestamp, block.timestamp + _duration, true, false);
+    }
+
+    function claim(uint _policyId) external {
+        Policy storage policy = policies[_policyId];
+        require(policy.insured == msg.sender, "Not insured by caller");
+        require(policy.active, "Policy not active");
+        require(block.timestamp >= policy.endDate, "Policy not expired");
+        require(!policy.claimed, "Policy already claimed");
+        payable(msg.sender).transfer(policy.payout);
+        policy.claimed = true;
+    }
+}
