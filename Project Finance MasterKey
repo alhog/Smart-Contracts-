@@ -1,0 +1,37 @@
+pragma solidity ^0.8.0;
+
+contract DataPipeline {
+
+    address public contractor;
+    uint public totalHours;
+    uint public hourlyRate;
+    uint public totalContractValue;
+
+    // Modifier to restrict access to the contractor only
+    modifier onlyContractor() {
+        require(msg.sender == contractor, "Only the contractor can access this function");
+        _;
+    }
+
+    // Constructor to initialize contract variables
+    constructor(uint _totalHours, uint _hourlyRate) {
+        contractor = msg.sender;
+        totalHours = _totalHours;
+        hourlyRate = _hourlyRate;
+        totalContractValue = totalHours * hourlyRate;
+    }
+
+    // Function to update the total contract value
+    function updateTotalContractValue() external onlyContractor {
+        totalContractValue = totalHours * hourlyRate;
+    }
+
+    // Function to withdraw funds from the contract
+    function withdrawFunds() external onlyContractor {
+        payable(contractor).transfer(address(this).balance);
+    }
+
+    // Fallback function to receive ether
+    receive() external payable {}
+
+}
