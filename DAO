@@ -1,0 +1,48 @@
+pragma solidity ^0.8.0;
+
+contract DAO {
+    mapping(address => uint) public shares;
+    mapping(address => mapping(address => uint)) public allowed;
+    uint public totalShares;
+    uint public proposalCount;
+
+    struct Proposal {
+        address creator;
+        string description;
+        uint forVotes;
+        uint againstVotes;
+        bool executed;
+        mapping(address => bool) voters;
+    }
+
+    mapping(uint => Proposal) public proposals;
+
+    function createProposal(string memory _description) external {
+        require(shares[msg.sender] > 0, "Must have shares to create proposal");
+        uint proposalID = proposalCount++;
+        proposals[proposalID] = Proposal(msg.sender, _description, 0, 0, false);
+    }
+
+    function vote(uint _proposalID, bool _supportsProposal) external {
+        Proposal storage proposal = proposals[_proposalID];
+        require(shares[msg.sender] > 0, "Must have shares to vote");
+        require(!proposal.voters[msg.sender], "Cannot vote twice for same proposal");
+        
+        if (_supportsProposal) {
+            proposal.forVotes += shares[msg.sender];
+        } else {
+            proposal.againstVotes += shares[msg.sender];
+        }
+        proposal.voters[msg.sender] = true;
+    }
+
+    function executeProposal(uint _proposalID) external {
+        Proposal storage proposal = proposals[_proposalID];
+        require(!proposal.executed, "Proposal already executed");
+        require(proposal.forVotes > proposal.againstVotes, "Proposal must have majority support");
+
+        // Execute proposal code here
+        
+        proposal.executed = true;
+    }
+}
