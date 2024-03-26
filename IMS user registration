@@ -1,0 +1,67 @@
+# Step 1: User Registration
+
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    hashed_password = generate_password_hash(password)
+
+    new_user = User(username=username, email=email, password=hashed_password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'message': 'User created successfully'})
+
+# Step 2: User Authentication
+
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from werkzeug.security import check_password_hash
+
+app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this to a random string
+jwt = JWTManager(app)
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    user = User.query.filter_by(username=username).first()
+
+    if not user or not check_password_hash(user.password, password):
+        return jsonify({'message': 'Invalid username or password'}), 401
+
+    access_token = create_access_token(identity=user.id)
+    return jsonify(access_token=access_token)
+
+# Step 3: User Profile Management
+
+@app.route('/profile/<int:user_id>', methods=['GET'])
+@jwt_required()
+def get_profile(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    return jsonify({'username': user.username, 'email': user.email})
+
+if __name__ == '__main__':
+    db.create_all()
+    app.run(debug=True)
