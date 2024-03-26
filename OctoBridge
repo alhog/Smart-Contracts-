@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract Octopus is Ownable {
+    IERC20 public token; // ERC20 token used for transactions
+    mapping(address => uint) public escrowBalances; // Data escrow balances
+    mapping(address => uint) public bountyBalances; // Bounty balances
+    uint public totalFunds; // Total funds in the contract
+
+    event DataLocked(address indexed dataOwner, uint amount);
+    event FundsReceived(address indexed sender, uint amount);
+    event TokensDripped(uint amount);
+
+    constructor(address _tokenAddress) {
+        token = IERC20(_tokenAddress);
+    }
+
+    function receiveFunds() external payable {
+        totalFunds += msg.value;
+        emit FundsReceived(msg.sender, msg.value);
+    }
+
+    function lockData(uint amount) external {
+        require(token.balanceOf(msg.sender) >= amount, "Insufficient tokens");
+        token.transferFrom(msg.sender, address(this), amount);
+        escrowBalances[msg.sender] += amount;
+        emit DataLocked(msg.sender, amount);
+    }
+
+    function unlockData(address recipient, uint amount) external onlyOwner {
+        require(escrowBalances[recipient] >= amount, "Insufficient locked data");
+        escrowBalances[recipient] -= amount;
+        token.transfer(recipient, amount);
+    }
+
+    function dripTokens(uint amount) external onlyOwner {
+        require(amount <= token.balanceOf(address(this)), "Insufficient tokens in faucet");
+        token.transfer(owner(), amount);
+        emit TokensDripped(amount);
+    }
+
+    function withdrawFunds(uint amount) external onlyOwner {
+        require(amount <= address(this).balance, "Insufficient funds");
+        payable(owner()).transfer(amount);
+        totalFunds -= amount;
+    }
+
+    function setBounty(address recipient, uint amount) external onlyOwner {
+        bountyBalances[recipient] += amount;
+    }
+
+    function claimBounty(uint amount) external {
+        require(bountyBalances[msg.sender] >= amount, "Insufficient bounty balance");
+        bountyBalances[msg.sender] -= amount;
+        token.transfer(msg.sender, amount);
+    }
+
+    // Function to send tokens to another contract or network bridge
+    function sendTokens(address bridgeAddress, uint amount) external onlyOwner {
+        token.transfer(bridgeAddress, amount);
+    }
+
+    // Function to receive tokens from another contract or network bridge
+    function receiveTokens(address bridgeAddress, uint amount) external onlyOwner {
+        token.transferFrom(bridgeAddress, address(this), amount);
+    }
+}
