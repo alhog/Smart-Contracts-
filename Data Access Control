@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract DataAccessControl {
+    // Struct to represent a data access permission
+    struct AccessPermission {
+        bool isAllowed;
+        uint256 expirationTimestamp;
+    }
+
+    // Mapping to store access permissions for each user
+    mapping(address => AccessPermission) private accessPermissions;
+
+    // Event emitted when access permission is granted or revoked
+    event AccessPermissionChanged(address indexed user, bool isAllowed, uint256 expirationTimestamp);
+
+    // Modifier to check if the caller has access permission
+    modifier hasAccessPermission() {
+        require(accessPermissions[msg.sender].isAllowed, "Access denied");
+        require(block.timestamp < accessPermissions[msg.sender].expirationTimestamp || accessPermissions[msg.sender].expirationTimestamp == 0, "Access permission expired");
+        _;
+    }
+
+    // Function to grant access permission to a user
+    function grantAccessPermission(address user, uint256 expirationTimestamp) public {
+        accessPermissions[user].isAllowed = true;
+        accessPermissions[user].expirationTimestamp = expirationTimestamp;
+        emit AccessPermissionChanged(user, true, expirationTimestamp);
+    }
+
+    // Function to revoke access permission from a user
+    function revokeAccessPermission(address user) public {
+        accessPermissions[user].isAllowed = false;
+        accessPermissions[user].expirationTimestamp = 0;
+        emit AccessPermissionChanged(user, false, 0);
+    }
+
+    // Function to check if a user has access permission
+    function checkAccessPermission(address user) public view returns (bool) {
+        return accessPermissions[user].isAllowed && (block.timestamp < accessPermissions[user].expirationTimestamp || accessPermissions[user].expirationTimestamp == 0);
+    }
+}
