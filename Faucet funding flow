@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract FundingContract {
+    address public owner;
+    uint public totalFunds;
+
+    event FundsReceived(address indexed sender, uint amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function receiveFunds() external payable {
+        totalFunds += msg.value;
+        emit FundsReceived(msg.sender, msg.value);
+    }
+
+    function withdrawFunds(uint amount) external {
+        require(msg.sender == owner, "Only the owner can withdraw funds");
+        require(amount <= address(this).balance, "Insufficient funds");
+        payable(msg.sender).transfer(amount);
+        totalFunds -= amount;
+    }
+}
