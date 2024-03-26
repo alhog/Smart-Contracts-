@@ -1,0 +1,26 @@
+pragma solidity ^0.8.0;
+
+contract MachineLearningModel {
+    address public owner;
+    string public modelURI;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only contract owner can perform this action");
+        _;
+    }
+
+    constructor(string memory _modelURI) {
+        owner = msg.sender;
+        modelURI = _modelURI;
+    }
+
+    function updateModelURI(string memory _newURI) public onlyOwner {
+        modelURI = _newURI;
+    }
+
+    function predict(bytes memory _data) public view returns (bytes memory) {
+        // Implement machine learning model prediction logic
+        // This function can be replaced with the actual prediction code
+        return abi.encodePacked("Prediction result for input data: ", _data);
+    }
+}
