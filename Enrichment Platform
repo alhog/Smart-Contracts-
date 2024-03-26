@@ -1,0 +1,33 @@
+pragma solidity ^0.8.0;
+
+contract EnrichmentPlatform {
+    address public owner;
+    mapping(address => bool) public allowedUsers;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only contract owner can perform this action");
+        _;
+    }
+
+    modifier onlyAllowed() {
+        require(allowedUsers[msg.sender], "Sender is not allowed to perform this action");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function addToAllowedUsers(address _user) public onlyOwner {
+        allowedUsers[_user] = true;
+    }
+
+    function removeFromAllowedUsers(address _user) public onlyOwner {
+        delete allowedUsers[_user];
+    }
+
+    function enrichData(bytes memory _data) public onlyAllowed returns (bytes memory) {
+        // Implement data enrichment logic
+        return _data;
+    }
+}
