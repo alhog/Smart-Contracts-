@@ -1,6 +1,105 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+contract ProprietaryPipeline {
+    address public immutable owner;
+
+    mapping(bytes32 => bool) private encryptedData;
+    mapping(bytes32 => bool) public dataHashes;
+    mapping(address => bool) private authorizedAPIs;
+
+    bool public complianceStatus;
+    bool public updatesEnabled;
+    uint256 public maintenanceCost;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only contract owner can perform this action");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // Encrypt data and store its hash
+    function encryptData(bytes memory _data) public onlyOwner returns (bytes32) {
+        bytes32 dataHash = keccak256(_data);
+        encryptedData[dataHash] = true;
+        return dataHash;
+    }
+
+    // Validate data integrity by comparing with stored hash
+    function validateData(bytes memory _data, bytes32 _dataHash) public view returns (bool) {
+        return encryptedData[_dataHash] && (keccak256(_data) == _dataHash);
+    }
+
+    // Decrypt data if validation passes (dummy function for demonstration)
+    function decryptData(bytes memory _data) public pure returns (bytes memory) {
+        return _data; // Placeholder, actual decryption logic should be implemented
+    }
+
+    // Add data hash to blockchain for transparency and integrity
+    function addToBlockchain(bytes32 _dataHash) public onlyOwner {
+        dataHashes[_dataHash] = true;
+    }
+
+    // Check if data hash exists in blockchain
+    function checkInBlockchain(bytes32 _dataHash) public view returns (bool) {
+        return dataHashes[_dataHash];
+    }
+
+    // Set compliance status to true once regulations are met
+    function setCompliance() public onlyOwner {
+        complianceStatus = true;
+    }
+
+    // Check if compliance status is met
+    function checkCompliance() public view returns (bool) {
+        return complianceStatus;
+    }
+
+    // Add authorized API for data integration
+    function addAuthorizedAPI(address _api) public onlyOwner {
+        authorizedAPIs[_api] = true;
+    }
+
+    // Remove authorized API
+    function removeAuthorizedAPI(address _api) public onlyOwner {
+        authorizedAPIs[_api] = false;
+    }
+
+    // Check if API is authorized
+    function checkAuthorizedAPI(address _api) public view returns (bool) {
+        return authorizedAPIs[_api];
+    }
+
+    // Enable dynamic updates
+    function enableUpdates() public onlyOwner {
+        updatesEnabled = true;
+    }
+
+    // Disable dynamic updates
+    function disableUpdates() public onlyOwner {
+        updatesEnabled = false;
+    }
+
+    // Check if dynamic updates are enabled
+    function checkUpdatesEnabled() public view returns (bool) {
+        return updatesEnabled;
+    }
+
+    // Set maintenance cost
+    function setMaintenanceCost(uint256 _cost) public onlyOwner {
+        maintenanceCost = _cost;
+    }
+
+    // Get maintenance cost
+    function getMaintenanceCost() public view returns (uint256) {
+        return maintenanceCost;
+    }
+}// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 contract DataPipeline {
     address public owner;
     mapping(bytes32 => bool) private encryptedData; // Store encrypted data hashes
